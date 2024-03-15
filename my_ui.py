@@ -139,6 +139,8 @@ class My_ButtonUI:
 	def collidepoint(self, pos):
 		# 垃圾pygame，collectpoint就不会做相对坐标和绝对坐标转换，无法对我自定义平面绘制的按钮做碰撞检测
 		# 需要我自己处理相对坐标和绝对坐标转换
+		if not self.button_rect:	# 没有画到屏幕上，就不用检测碰撞
+			return False
 		abs_x, abs_y = self.absolute_point
 		pos_x, pos_y = pos
 		w, h = self.button_rect.size
