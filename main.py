@@ -6,7 +6,7 @@ import manager
 
 
 game_list = [		# 增加游戏模块
-	"test_game","txz","test_game",
+	"test_game","txz","test_game", "game2048"
 ]
 
 def register_game(manager):
