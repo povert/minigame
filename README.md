@@ -11,3 +11,7 @@ defines.py是一些常量定义和通用逻辑
 
 # 安装依赖
 pip install pygame
+
+# 运行游戏
+cd minigame
+python3 main.py
