@@ -112,7 +112,7 @@ class Manager:
 				return
 			self.curgame.deal_mousebuttondown_event(event)
 			return
-		if self.select_game and self.game_menu[self.select_game].collidepoint(event.pos):
+		if self.game_menu[self.select_game].collidepoint(event.pos):
 			self.curgame = self.game_list[self.select_game]
 			self.curgame.start()
 
