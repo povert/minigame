@@ -8,3 +8,6 @@ my_ui.py是自定义实现一部分悬浮和点击效果的UI组件
 defines.py是一些常量定义和通用逻辑
 
 每一个游戏的具体实现思路在各个游戏的__init__.py文件中或者游戏的主文件中
+
+# 安装依赖
+pip install pygame
