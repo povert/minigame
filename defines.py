@@ -9,6 +9,7 @@ GREEN = (0, 255, 0)	# 绿色
 BLUE = (0, 0, 255)	# 蓝色
 YELLOW = (255, 255, 0)	# 黄色
 PURPLE = (128, 0, 128)	# 紫色
+GREY = (128, 128, 128)	# 灰色
 
 FONT_DICT = {}
 IMAGE_DICT = {}

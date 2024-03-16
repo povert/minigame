@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
+import sys,time
 import pygame
 import my_ui
 from defines import *
@@ -8,9 +8,11 @@ from defines import *
 class Manager:
 	
 	SCENE_SIZE = (700, 1000)
+	FPS_LIMIT = 60
 
 	def __init__(self):
 		self.scene = pygame.display.set_mode(Manager.SCENE_SIZE)
+		self.clock = pygame.time.Clock()
 		self.curgame = None 
 		self.game_list = []
 		self.game_menu = {}
@@ -18,13 +20,14 @@ class Manager:
 		self.running = False
 		self.select_game = 0
 		self.page = 0
+		self._fps_info = [0, 0, 0]
 
 	def add_game(self, game):
 		self.game_list.append(game)
 
 	def run(self):
 		self.running = True
-		self.init_menu()
+		self.init_run()
 		while self.running:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -42,10 +45,12 @@ class Manager:
 				self.draw_menu()
 			else:
 				self.draw_game()
+			self.draw_FPS()
 			pygame.display.update()
+			self.clock.tick(Manager.FPS_LIMIT)
 		self.quit()
 
-	def init_menu(self):
+	def init_run(self):
 		self.game_menu = {}
 		for i, game in enumerate(self.game_list):
 			if i >= 22:		# 先只支持显示22个，后面做的多了在做分页处理
@@ -60,6 +65,12 @@ class Manager:
 		self.button_dict["home"] = my_ui.My_TextUI("返回", 30, BLACK)
 		self.button_dict["home"].set_hover_color(RED)
 		self.button_dict["home"].set_hover_size(40)
+		self._fps_info = [int(time.time()), 0, Manager.FPS_LIMIT]
+
+	def draw_background(self):
+		deal_image_func=Function(pygame.transform.scale, args = [Manager.SCENE_SIZE,])
+		deal_image_func.args_backward()
+		draw_image(self.scene,"./images/background.jpg", deal_image_func = deal_image_func, x = 0, y = 0)
 
 	def draw_menu(self):
 		draw_text(self.scene, "菜单列表", 40, BLACK, y = 50)
@@ -76,10 +87,14 @@ class Manager:
 		self.curgame.draw()
 		self.scene.blit(self.curgame.scene, (0, 120))
 
-	def draw_background(self):
-		deal_image_func=Function(pygame.transform.scale, args = [Manager.SCENE_SIZE,])
-		deal_image_func.args_backward()
-		draw_image(self.scene,"./images/background.jpg", deal_image_func = deal_image_func, x = 0, y = 0)
+	def draw_FPS(self):
+		t = int(time.time())
+		if t == self._fps_info[0]:
+			self._fps_info[1] += 1
+		else:
+			self._fps_info = [t, 1, self._fps_info[1]]
+		draw_text(self.scene, "FPS: %d"%self._fps_info[2], 24, GREY, (Manager.SCENE_SIZE[0] - 110), 20)
+
 
 	def deal_keydown_event(self, event):
 		if event.key == pygame.K_ESCAPE:

@@ -94,7 +94,6 @@ class Game(game.Game):
 					text_surface = get_text_surface(str(num), size, BLACK)
 					text_rect = text_surface.get_rect(center=(pos_x + 40, pos_y + 40))
 					self.game_surface.blit(text_surface, text_rect)
-				8
 
 	def draw_score(self):
 		source_surface = get_text_surface("分数", 42, WHITE)
