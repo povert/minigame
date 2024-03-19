@@ -59,9 +59,7 @@ class GameMenu(object):
 			game_text_ui = objects.MyUIText("%s：%s"%(i + 1, game.name), 30, BLACK)
 			game_text_ui.set_hover_color(RED)
 			game_text_ui.set_hover_size(32)
-			game_text_ui.set_click_func(objects.Function(self.start_game, args = [i, ]))
-			self.custom_mouseUI[i] = game_text_ui
-			game_text_ui.draw(self.scene, (x, y))
+			game_text_ui.set_pos((x, y))
 			self.game_menu[i] = game_text_ui
 		self.custom_mouseUI["home"] = objects.MyUIText("返回主菜单", 30, BLACK)
 		self.custom_mouseUI["home"].set_hover_color(RED)
@@ -96,20 +94,16 @@ class GameMenu(object):
 			self.on_keydown_event(event)
 	
 	def on_keydown_event(self, event):
-		old_select_game = self.select_game
 		if event.key == pygame.K_DOWN:
-			self.select_game = max(0, min(len(self.game_list) - 2, self.select_game + 2))
+			self.select_game = max(0, min(len(self.game_list) - (self.select_game % 2 + 1), self.select_game + 2))
 		elif event.key == pygame.K_UP:
-			self.select_game = max(0, min(len(self.game_list) - 2, self.select_game - 2))
+			self.select_game = max(0, min(len(self.game_list) - (self.select_game % 2 + 1), self.select_game - 2))
 		elif event.key == pygame.K_LEFT:
 			self.select_game = max(0, min(len(self.game_list) - 1, self.select_game - self.select_game % 2))
 		elif event.key == pygame.K_RIGHT:
 			self.select_game = max(0, min(len(self.game_list) - 1, self.select_game + (self.select_game + 1) % 2))
 		elif event.key == pygame.K_RETURN:
 			self.start_game(self.select_game)
-		self.game_menu[self.select_game].is_hover = True
-		if old_select_game != self.select_game:
-			self.game_menu[old_select_game].is_hover = False
 
 	def deal_mousebuttondown_event(self, event):
 		for customUI in self.custom_mouseUI.values():
@@ -122,12 +116,22 @@ class GameMenu(object):
 			customUI.check_mouse(event.pos, pygame.MOUSEBUTTONUP)
 		if self.curgame:
 			self.curgame.deal_mousebuttonup_event(event)
+		else:
+			for i, game_text_ui in self.game_menu.items():
+				if game_text_ui.collidepoint(event.pos):
+					self.start_game(i)
+					break
 
 	def deal_mousemotion_event(self, event):
 		for customUI in self.custom_mouseUI.values():
 			customUI.check_mouse(event.pos, pygame.MOUSEMOTION)
 		if self.curgame:
 			self.curgame.deal_mousemotion_event(event)
+		else:
+			for i, game_text_ui in self.game_menu.items():
+				if game_text_ui.collidepoint(event.pos):
+					self.select_game = i
+					break
 
 	def draw(self):
 		self.scene.blit(self.backgroud, (0, 0))
@@ -139,11 +143,17 @@ class GameMenu(object):
 			self.curgame.draw(self.scene)
 		else:
 			self.scene.blit(get_text_surface("游戏菜单", 40, BLACK), (GameMenu.SCENE_SIZE[0] // 2 - 100, 50))
-			self.game_menu[self.select_game].is_hover = True
-			for game_text_ui in self.game_menu.values():
-				game_text_ui.draw(self.scene)
+			self.draw_menu()
 		self.draw_fps()
-	
+
+	def draw_menu(self):
+		for i, game_text_ui in self.game_menu.items():
+			if i == self.select_game:
+				game_text_ui.is_hover = True
+			else:
+				game_text_ui.is_hover = False
+			game_text_ui.draw(self.scene)
+
 	def draw_fps(self):
 		t = int(time.time())
 		if t == self._fps_info[0]:
