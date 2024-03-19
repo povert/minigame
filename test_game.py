@@ -28,6 +28,7 @@ class Game(game.Game):
 		self.custom_mouseUI["text"].set_hover_color((255, 0, 0))
 		self.custom_mouseUI["text"].set_click_color((0, 255, 0))
 		self.custom_mouseUI["text"].set_click_func(self.click_text)
+		self.custom_mouseUI["text"].set_pos((200, 200))
 		self.custom_mouseUI["image"] = objects.MyUIImage("./images/background.jpg", (120, 120), abs_offset=self.abs_offset)
 		self.custom_mouseUI["image"].set_hover_image("./images/test.webp")
 		self.custom_mouseUI["image"].set_hover_size((200, 200))
@@ -42,9 +43,7 @@ class Game(game.Game):
 	def on_keydown(self, event):
 		self.key_text = "按键%s"%str(event.key)
 
-	def on_draw(self):
-		self.custom_mouseUI["image"].draw(self.scene, (0, 0))
-		self.custom_mouseUI["text"].draw(self.scene, (200, 200))
+	def custom_draw(self):
 		self.scene.blit(get_text_surface("当前操作：%s"%self.key_text, 30, (0, 0, 0)), (220, 300))
 
 		

@@ -96,6 +96,7 @@ class GameMenu(object):
 			self.on_keydown_event(event)
 	
 	def on_keydown_event(self, event):
+		old_select_game = self.select_game
 		if event.key == pygame.K_DOWN:
 			self.select_game = max(0, min(len(self.game_list) - 2, self.select_game + 2))
 		elif event.key == pygame.K_UP:
@@ -105,8 +106,10 @@ class GameMenu(object):
 		elif event.key == pygame.K_RIGHT:
 			self.select_game = max(0, min(len(self.game_list) - 1, self.select_game + (self.select_game + 1) % 2))
 		elif event.key == pygame.K_RETURN:
-			self.curgame = self.game_list[self.select_game]
+			self.start_game(self.select_game)
 		self.game_menu[self.select_game].is_hover = True
+		if old_select_game != self.select_game:
+			self.game_menu[old_select_game].is_hover = False
 
 	def deal_mousebuttondown_event(self, event):
 		for customUI in self.custom_mouseUI.values():
@@ -136,6 +139,7 @@ class GameMenu(object):
 			self.curgame.draw(self.scene)
 		else:
 			self.scene.blit(get_text_surface("游戏菜单", 40, BLACK), (GameMenu.SCENE_SIZE[0] // 2 - 100, 50))
+			self.game_menu[self.select_game].is_hover = True
 			for game_text_ui in self.game_menu.values():
 				game_text_ui.draw(self.scene)
 		self.draw_fps()

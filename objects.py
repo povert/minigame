@@ -18,6 +18,7 @@ class MyUIText:
 		self.click_color = font_color
 		self.is_hover = False
 		self.is_click = False
+		self.is_show = True
 		self.click_func = None
 		self.abs_offset = abs_offset
 		self.text_rect = None
@@ -37,28 +38,39 @@ class MyUIText:
 	def set_click_func(self, func):
 		self.click_func = func
 
+	def set_pos(self, pos):
+		text_surface = get_text_surface(self.text, self.size, self.color)
+		self.text_rect = text_surface.get_rect(topleft=pos)
+
+	def is_showUI(self):
+		return self.is_show
+
 	def draw(self, surface, pos = None, abs_offset = None):
+		if not self.is_showUI():
+			return
 		text_surface = get_text_surface(self.text, self.size, self.color)
 		if pos is None and self.text_rect:
-			text_rect = self.text_rect
+			x, y = self.text_rect.x, self.text_rect.y
 		else:
-			x, y = pos
+			x, y = pos if pos else (None, None)
 			if x is None:
 				x = (surface.get_width() - text_surface.get_width())//2
 			if y is None:
 				y = (surface.get_height() - text_surface.get_height())//2
-			text_rect = text_surface.get_rect(topleft=(x, y))
+		text_rect = text_surface.get_rect(topleft=(x, y))
 		surface.blit(text_surface, text_rect)
 		self.text_rect = text_rect
 		self.abs_offset = abs_offset if abs_offset else self.abs_offset
 
 	def check_mouse(self, mouse_pos, mousebutton_state = None):
+		if not self.is_showUI():
+			return
 		is_collidepoint = self.collidepoint(mouse_pos)
 		self.is_hover = is_collidepoint
 		self.is_click =  mousebutton_state == pygame.MOUSEBUTTONDOWN and is_collidepoint
 		if self.click_func and is_collidepoint and mousebutton_state == pygame.MOUSEBUTTONUP:
-			self.click_func()
-		
+			self.on_click_func()
+
 	def collidepoint(self, pos):
 		if not self.text_rect:
 			return False
@@ -71,6 +83,9 @@ class MyUIText:
 		if pos_y < y or pos_y > y + h:
 			return False
 		return True
+
+	def on_click_func(self):
+		self.click_func()
 
 	@property
 	def size(self):
@@ -100,6 +115,7 @@ class MyUIImage:
 		self.click_func = None
 		self.is_hover = False
 		self.is_click = False
+		self.is_show = True
 		self.image_rect = None
 
 	def set_hover_image(self, image_path):
@@ -117,30 +133,40 @@ class MyUIImage:
 	def set_click_func(self, func):
 		self.click_func = func
 
+	def set_pos(self, pos):
+		image_surface = get_image_surface(self.image)
+		image_size = self.size
+		if image_size:
+			image_surface = pygame.transform.scale(image_surface, image_size)
+		self.image_rect = image_surface.get_rect(topleft=pos)
+
+	def is_showUI(self):
+		return self.is_show
+
 	def draw(self, surface, pos = None, abs_offset = None):
+		if not self.is_showUI():
+			return
 		image_surface = get_image_surface(self.image)
 		image_size = self.size
 		if image_size:
 			image_surface = pygame.transform.scale(image_surface, image_size)
 		if pos is None and self.image_rect:
-			image_rect = self.image_rect
+			x, y = self.image_rect.x, self.image_rect.y
 		else:
-			x, y = pos
-			if x is None:
-				x = (surface.get_width() - image_surface.get_width())//2
-			if y is None:
-				y = (surface.get_height() - image_surface.get_height())//2
-			image_rect = image_surface.get_rect(topleft=(x, y))
+			x, y = pos if pos else (0, 0)
+		image_rect = image_surface.get_rect(topleft=(x, y))
 		surface.blit(image_surface, image_rect)
 		self.image_rect = image_rect
 		self.abs_offset = abs_offset if abs_offset else self.abs_offset
 
 	def check_mouse(self, mouse_pos, mousebutton_state = None):
+		if not self.is_showUI():
+			return
 		is_collidepoint = self.collidepoint(mouse_pos)
 		self.is_hover = is_collidepoint
 		self.is_click =  mousebutton_state == pygame.MOUSEBUTTONDOWN and is_collidepoint
 		if self.click_func and is_collidepoint and mousebutton_state == pygame.MOUSEBUTTONUP:
-			self.click_func()
+			self.on_click_func()
 
 	def collidepoint(self, pos):
 		if not self.image_rect:
@@ -154,7 +180,10 @@ class MyUIImage:
 		if pos_y < y or pos_y > y + h:
 			return False
 		return True
-	
+
+	def on_click_func(self):
+		self.click_func()
+
 	@property
 	def image(self):
 		if self.is_click:

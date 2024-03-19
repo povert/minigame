@@ -60,11 +60,19 @@ class Game:
 		pass
 
 	def draw(self, surface):
-		self.scene.fill((255, 255, 255))
-		self.on_draw()
+		self.draw_background()
+		self.draw_customUI()
+		self.custom_draw()
 		surface.blit(self.scene, self.abs_offset)
 
-	def on_draw(self):
+	def draw_background(self):
+		self.scene.fill((255, 255, 255))
+
+	def draw_customUI(self):
+		for customUI in self.custom_mouseUI.values():
+			customUI.draw(self.scene)
+
+	def custom_draw(self):
 		pass
 
 	@property

@@ -6,7 +6,7 @@ import gamemenu
 
 
 game_list = [		# 增加游戏模块
-	"test_game",
+	"test_game", "txz"
 ]
 
 def register_game(manager):
