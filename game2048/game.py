@@ -4,7 +4,7 @@ import numpy
 import random
 import pygame
 import game
-import my_ui
+import objects
 from defines import *
 
 
@@ -54,7 +54,6 @@ class Game(game.Game):
 		self.sum_score = 0
 		self.game_array = []
 		self.game_surface = pygame.Surface((400, 700))	# 2048游戏数字区域
-		self.button_dict = {}
 		self.is_fail = False
 
 	@property
@@ -62,8 +61,14 @@ class Game(game.Game):
 		return "2048"
 
 	def start(self):
-		self.button_dict["restart"] = my_ui.My_ButtonUI("./game2048/restart.png", button_size=(60, 60))
+		self.custom_mouseUI["restart"] = objects.MyUIImage("./game2048/restart.png", image_size=(60, 60))
+		self.custom_mouseUI["restart"].set_hover_image("./game2048/restart_click.png")
+		self.custom_mouseUI["restart"].set_click_func(self.game_start)
+		self.custom_mouseUI["restart"].is_show = False
 		self.game_start()
+
+	def end(self):
+		self.custom_mouseUI.clear()
 
 	def game_start(self):
 		self.game_array = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
@@ -71,10 +76,13 @@ class Game(game.Game):
 		self.max_score = 0
 		self.sum_score = 0
 		self.game_array[random.randint(0, 3)][random.randint(0, 3)] = 2
+		self.max_score += 2
 
-	def draw(self):
+	def draw_background(self):
 		self.scene.fill((28, 28, 28))
 		self.game_surface.fill((136,119,119))
+
+	def custom_draw(self):
 		self.draw_game_surface()
 		self.draw_score()
 		self.draw_tips()
@@ -97,7 +105,7 @@ class Game(game.Game):
 
 	def draw_score(self):
 		source_surface = get_text_surface("分数", 42, WHITE)
-		size = 30 if self.sum_score > 32768 else Game.NUM_SIZE_CONFIG[self.sum_score]
+		size = 30 if self.max_score > 32768 else Game.NUM_SIZE_CONFIG[self.max_score]
 		source_value = get_text_surface(str(self.sum_score), size, WHITE)
 		width = max(source_surface.get_width(), source_value.get_width()) + 16
 		pos_x, pos_y = max(0, (200 - width) // 2) + 10, 530
@@ -115,8 +123,8 @@ class Game(game.Game):
 
 
 		source_surface = get_text_surface("最高分", 40, WHITE)
-		size = 30 if self.sum_score > 32768 else Game.NUM_SIZE_CONFIG[self.sum_score]
-		source_value = get_text_surface(str(self.sum_score), size, WHITE)
+		size = 30 if self.max_score > 32768 else Game.NUM_SIZE_CONFIG[self.max_score]
+		source_value = get_text_surface(str(self.max_score), size, WHITE)
 		width = max(source_surface.get_width(), source_value.get_width()) + 16
 		pos_x, pos_y = max(0, (200 - width) // 2) + 190, 530
 		source_background = pygame.Surface((width, 140))
@@ -158,13 +166,13 @@ class Game(game.Game):
 			pos_x, pos_y = max(0, (400 - tips_surface.get_width() - 50) // 2), max(0, (80 - tips_surface.get_height()) // 2)
 			self.game_surface.blit(tips_surface, (pos_x, pos_y))
 			pos2_x = pos_x + tips_surface.get_width() - 10
-			self.button_dict["restart"].set_hover_image("./game2048/restart_click.png")
-			self.button_dict["restart"].draw(self.game_surface, pos2_x, 10, absolute_point=(150, 120))
+			self.custom_mouseUI["restart"].is_show = True
+			self.custom_mouseUI["restart"].draw(self.game_surface, pos = (pos2_x, 10), abs_offset=(150, 120))
 		else:
 			pos_x, pos_y = max(0, (400 - tips_surface.get_width()) // 2), max(0, (80 - tips_surface.get_height()) // 2)
 			self.game_surface.blit(tips_surface, (pos_x, pos_y))
 
-	def deal_keydown_event(self, event):
+	def on_keydown(self, event):
 		if self.is_fail:
 			return
 		if event.key == pygame.K_LEFT or event.key == pygame.K_a:
@@ -176,17 +184,6 @@ class Game(game.Game):
 		elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
 			self.move_down()
 
-	def deal_mousemotion_event(self, event):
-		for key, button in self.button_dict.items():
-			button.set_hover(button.collidepoint(event.pos))
-
-	def deal_mousebuttondown_event(self, event):
-		if event.button == 1:
-			for key, button in self.button_dict.items():
-				if button.collidepoint(event.pos):
-					if key == "restart":
-						self.game_start()
-	
 	def move_up(self):
 		self.move()
 
@@ -209,6 +206,7 @@ class Game(game.Game):
 		# 通用实现一个上移动的算法，其他移动使用numpy逻辑对数组旋转成左移动再旋转回来
 		# 简单来说就是不想多写重复代码，但是没想好通用算法怎么实现好写
 		blankpos_list = []
+		is_change = False
 		for i in range(4):
 			bottom = 0
 			for j in range(1,4):
@@ -218,24 +216,31 @@ class Game(game.Game):
 					bottom_temp = bottom
 					if self.game_array[i][bottom_temp] != 0:
 						bottom += 1
+						self.sum_score += self.game_array[i][j]
 					self.game_array[i][bottom_temp] += self.game_array[i][j]
 					self.game_array[i][j] = 0
+					self.max_score = max(self.max_score, self.game_array[i][bottom_temp])
+					is_change = True
 				else:
 					bottom += 1
 			# 处理因为判断底部能不能和上一个合并时，最后一个判断不能合并因为跳出循环导致没移动
 			if self.game_array[i][bottom] == 0 and bottom < 3:	
 				self.game_array[i][bottom] += self.game_array[i][j]
 				self.game_array[i][j] = 0
+				is_change = True
 
 			for j in range(bottom, 4):
 				if self.game_array[i][j] == 0:
 					blankpos_list.append((i, j))
+		if not is_change:
+			return
 		if not blankpos_list:
 			self.is_fail = True
 			return
 		i, y = random.choice(blankpos_list)
 		value = 2 if random.random() < 0.9 else 4
 		self.game_array[i][y] = value
+
 
 
 
